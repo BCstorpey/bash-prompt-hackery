@@ -1,0 +1,107 @@
+#Green happy face on good exit, red sad face on bad
+HAPPYSMILE="\`if [ \$? = 0 ]; then echo -e '${BGreen}:)'; else echo -e '${BRed}:('; fi\`"
+
+##### UTILS
+alias last_command='fc -nl -1|sed -e "s/^\W*//"|cut -f 1 -d " "'
+LCOMM="Open Terminal"
+LARG=$(pwd)
+
+function set_lcomm {
+  LCOMM=`fc -nl -1|sed -e "s/^\W*//"|cut -f 1 -d " "`
+  LARG=`fc -nl -1|sed -e "s/^\W*//"|cut -f 2 -d " "`
+}
+
+######## D AND D
+alias get_success_phrase='echo ${DDSUCCESS[$((RANDOM%${#DDSUCCESS[*]}))]}'
+
+declare -a DDSUCCESS=("it was super effective"
+                      "it was successful"
+                      "$(whoami) found a sword † "
+                      "CRITICAL HIT!!"
+                      "$(whoami) finds 10 gold"
+                      "$(whoami) has summoned Epona ♘ "
+                      "$(whoami) has found a crown ♔ "
+                      "$(whoami) finds 1 health potion"
+                      "a winner is $(whoami)"
+                      "it was effective" )
+
+alias get_fail_phrase='echo ${DDFAILURE[$((RANDOM%${#DDFAILURE[*]}))]}'
+
+declare -a DDFAILURE=("it was not effective"
+                      "it failed"
+                      "CRITICAL MISS!!"
+                      "$(whoami) loses 10 hp"
+                      "$(whoami) needs health badly."
+                      "$(whoami) has died of dysentery"
+                      "I am error"
+                      "☠ "
+                      "$(whoami) is poisoned ☣ "
+                      "$(whoami) is poisoned ☠ "
+                      "$(whoami) is poisoned ☢ "
+                      "$(whoami) is hit with lightning ⚡ "
+                      "$(whoami) loses 10 mp"
+                      "$(whoami) turns into a rabbit"
+                      "it was less than effective" )
+
+
+alias get_cd_success_phrase='echo ${DDCDSUCCESS[$((RANDOM%${#DDCDSUCCESS[*]}))]}'
+
+declare -a DDCDSUCCESS=("$(whoami) enters a large room"
+                      "$(whoami) enters a small room"
+                      "$(whoami) finds themself in a dark forest"
+                      "$(whoami) enters the dungeon")
+
+alias get_cd_fail_phrase='echo ${DDCDFAILURE[$((RANDOM%${#DDCDFAILURE[*]}))]}'
+
+declare -a DDCDFAILURE=("That door was locked!"
+                      "Dead End."
+                      "$(whoami) hears a voice screaming \"You shall not PASS!\"" )
+
+
+
+HAPPYDD="\`if [ \"\$LCOMM\" == \"cd\" ]; then echo -en \"${BWhite}$(whoami) tries to open a door marked \$LARG. \" ;if [ \$EXIT = 0 ]; then echo -en '${BGreen}'; get_cd_success_phrase;else echo -en '${BRed}'; get_cd_fail_phrase; fi; else echo \$LCOMM |if [ \$EXIT = 0 ]; then xargs -I{} echo -en '${BGreen}sean used ${BBlue}{}${BGreen} '; get_success_phrase;else xargs -I{} echo -en '${BRed}sean used ${BBlue}{}${BRed} '; get_fail_phrase; fi; fi; \`"
+
+
+######## UNICODE HAPPY
+
+HAPPYFACE="\`if [ \$? = 0 ]; then echo -e '${BGreen}☺ '; else echo -e '${BRed}☹ '; fi\`"
+
+
+####### Zelda Style Hearts
+
+HEART_COUNT=8
+HEART_FULL_COUNT=4
+
+print_hearts="for ((i=0; i< \$HEART_FULL_COUNT;i++ ));do echo -n '♥ ';  done; for ((i=\$HEART_FULL_COUNT; i< \$HEART_COUNT;i++ )); do echo -n '♡ '; done"
+
+function update_hearts {
+   if [ -z "$EXIT" ] && [ "${EXIT+xxx}" = "xxx" ]; then EXIT=$?;echo "test"; fi
+   if [ $EXIT = 0 ]
+   then
+      if [ $HEART_FULL_COUNT -lt $HEART_COUNT ];
+      then
+         let "HEART_FULL_COUNT+=1"
+      fi
+   else
+      if [ $HEART_FULL_COUNT -gt 0 ];
+      then
+         let "HEART_FULL_COUNT-=1"
+      fi
+   fi
+}
+
+#HAPPYHEARTS="\`echo -ne '${BRed}'; ${print_hearts};\`"
+HAPPYHEARTS="\`if [ \$HEART_FULL_COUNT = 0 ];then echo -ne '${BlRed}You are dead.'; else echo -ne '${BRed}'; ${print_hearts}; fi;\`"
+HAPPYHEARTSBLINK="\`if [ \$HEART_FULL_COUNT = 1 ];then echo -ne '${BlRed}'; elif [ \$HEART_FULL_COUNT = 0 ];then echo -ne '${BlRed}You are dead.';else echo -ne '${BRed}'; fi; ${print_hearts};\`"
+
+#### Set prompt to be random
+
+prompt_type=$RANDOM
+let "prompt_type %= 4"
+case "$prompt_type" in
+  0 ) HAPPY=$HAPPYSMILE;;
+  1 ) HAPPY=$HAPPYDD;export PROMPT_COMMAND="$PROMPT_COMMAND;set_lcomm";;
+  2 ) HAPPY=$HAPPYFACE;;
+  3 ) HAPPY=$HAPPYHEARTSBLINK;export PROMPT_COMMAND="$PROMPT_COMMAND;update_hearts";;
+  * ) HAPPY=$HAPPYSMILE;
+esac
