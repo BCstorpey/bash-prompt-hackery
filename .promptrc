@@ -1,0 +1,79 @@
+#notes:
+#\a an ASCII bell character (07)
+#\d the date in "Weekday Month Date" format (e.g., "Tue May 26")
+#\D{format} - the format is passed to strftime(3) and the result is inserted into the prompt string; an empty format results in a locale-specific time representation. The braces are required
+#\e an ASCII escape character (033)
+#\h the hostname up to the first part
+#\H the hostname
+#\j the number of jobs currently managed by the shell
+#\l the basename of the shell's terminal device name
+#\n newline
+#\r carriage return
+#\s the name of the shell, the basename of $0 (the portion following the final slash)
+#\t the current time in 24-hour HH:MM:SS format
+#\T the current time in 12-hour HH:MM:SS format
+#\@ the current time in 12-hour am/pm format
+#\A the current time in 24-hour HH:MM format
+#\u the username of the current user
+#\v the version of bash (e.g., 2.00)
+#\V the release of bash, version + patch level (e.g., 2.00.0)
+#\w the current working directory, with $HOME abbreviated with a tilde
+#\W the basename of the current working directory, with $HOME abbreviated with a tilde
+#\! the history number of this command
+#\# the command number of this command
+#\$ if the effective UID is 0, a #, otherwise a $
+#\nnn the character corresponding to the octal number nnn
+#\\ a backslash
+#\[ begin a sequence of non-printing characters, which could be used to embed a terminal control sequence into the prompt
+#\] end a sequence of non-printing character
+
+
+if [ -f ~/config/.promptrc-annex ]; then
+    . ~/config/.promptrc-annex
+else
+    HAPPY="\`if [ \$? = 0 ]; then echo -e '${BGreen}:)'; else echo -e '${BRed}:('; fi\`"  
+fi
+
+#Me
+IAM="sean storpey"
+ 
+#\A is bash-speak for now in 24-hour time
+TIME="${BBlue}\A"
+ 
+#Current host name
+HOST="${BCyan}\h"
+
+#Full PWD
+PWDPR="${BBlue}\w"
+ 
+#this prompt automatically changes from $ to # and turns red when you're root
+PROMPT="\`if [ "\$UID" -eq 0 ]; then echo -e '${BRed}'; fi\`\\$"
+
+if [ $GIT_DEF == 1 ]
+then
+ 
+  #enable dirty notifications. * uncommmitted. + staged.
+  export GIT_PS1_SHOWDIRTYSTATE=1
+  GITSTAT="${BYellow}\$(__git_ps1)"
+fi
+ 
+#If you're not one of the people listed in IAM, show that in red
+USERPR="\`if [ \"\${IAM/\$(whoami)}\" = \"\$IAM\" ]; then echo -e \"${BPurple}\$(whoami)@\"; fi\`"
+ 
+set_prompt() {
+  # CSI 6n reports the cursor position as ESC[n;mR, where n is the row
+  # and m is the column. Issue this control sequence and silently read
+  # the resulting report until reaching the "R". By setting IFS to ";"
+  # in conjunction with read's -a flag, fields are placed in an array.
+  local curpos
+  echo -en '\033[6n'
+  IFS=';' read -s -d R -a curpos
+  curpos[0]="${curpos[0]:2}"  # strip leading ESC[
+  (( curpos[1] > 1 )) && echo ''
+
+  # set PS1...
+}
+
+
+export PS1="$TIME $HAPPY ${USERPR}${HOST} ${PWDPR}${GITSTAT}${RESETTXT}\n${PROMPT}${RESETTXT}"
+PROMPT_COMMAND="$PROMPT_COMMAND;echo -ne '\033]0;${DC}\007';set_prompt"
